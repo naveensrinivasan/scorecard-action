@@ -26,6 +26,7 @@ func main() {
 	os.Setenv("SCORECARD_IGNORE_LIST", "ignores.json")
 	os.Setenv("SCORECARD_CHECKS", "checks.json")
 	ghToken := os.Getenv("GITHUB_TOKEN")
+	fmt.Println(ghToken)
 	repoLocation := os.Getenv("SCORECARD_REPO_LOCATION")
 	ignoreList, err := GetIgnoreList()
 	if err != nil {
@@ -43,7 +44,7 @@ func main() {
 	}
 
 	// Get the dependency diff
-	data, err := GetDependencyDiff("ossf", "scorecard-action", ghToken, "HEAD", commitSHA)
+	data, err := GetDependencyDiff("naveensrinivasan", "scorecard-action", ghToken, "HEAD", commitSHA)
 	m := make(map[string]DependencyDiff)
 	if err != nil {
 		panic(err)
@@ -59,6 +60,10 @@ func main() {
 	for _, dep := range data {
 		m[dep.SourceRepositoryURL] = dep
 	}
+	do(m, checks)
+}
+
+func do(m map[string]DependencyDiff, checks []string) {
 	for k, _ := range m {
 		url := strings.TrimPrefix(k, "https://")
 		scorecard, error := GetScore(url)
@@ -74,13 +79,24 @@ func main() {
 			}
 			return false
 		})
-		fmt.Println(fmt.Sprintf("Scorecard for %s and number of checks is %d", k, len(scorecard.Checks)))
-		fmt.Println("Repo:  ", k)
-		for _, check := range scorecard.Checks {
-
-			fmt.Println(fmt.Sprintf("Check: %s, Score: %d\n", check.Name, check.Score))
-		}
+		result := WriteGitHubIssueComment(scorecard)
+		fmt.Println(result)
 	}
+}
+
+func WriteGitHubIssueComment(checks ScorecardResult) string {
+	sb := strings.Builder{}
+	for _, check := range checks.Checks {
+		// Write the score as a GitHub issue comment as HTML so that it can be rendered
+		// as a table
+		//append all of this to a string builder
+		//write a header with <details> and <summary> tags
+		sb.WriteString(fmt.Sprintf("<details><summary>%s</summary>\n", "Sccorecard"))
+		sb.WriteString(fmt.Sprintf("Check: %s, Score: %d\n", check.Name, check.Score))
+		sb.WriteString(fmt.Sprintf("<tr><td>%s</td><td>%d</td></tr>", check.Name, check.Score))
+	}
+	sb.WriteString("</details>")
+	return sb.String()
 }
 
 // getCommitSHA returns the commit SHA of the current branch.
@@ -118,8 +134,11 @@ func GetDependencyDiff(owner, repo, token, base, head string) ([]DependencyDiff,
 	}
 	var data []DependencyDiff
 	err = json.NewDecoder(resp.Body).Decode(&data)
+
 	if err != nil {
-		return nil, err
+		//read the body
+		message, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to decode response: %w , %s, %s", err, resp.Status, string(message))
 	}
 	// filter out the dependencies that are not added
 	var filteredData []DependencyDiff
@@ -162,6 +181,11 @@ func filter[T any](slice []T, f func(T) bool) []T {
 // This uses the IGNORE_LIST environment variable to get the path to the ignore list.
 func GetIgnoreList() ([]string, error) {
 	fileName := os.Getenv("SCORECARD_IGNORE_LIST")
+	//check if the file exists
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
 	f, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
@@ -175,8 +199,17 @@ func GetIgnoreList() ([]string, error) {
 	}
 	return ignoreListFromFile, nil
 }
+
+// GetScorecardChecks returns a list of checks to run from SCORECARD_CHECKS
+// if the file does not exist, or it is empty, it returns nil
+// if the file contains a list of checks, it returns that list
 func GetScorecardChecks() ([]string, error) {
 	fileName := os.Getenv("SCORECARD_CHECKS")
+	//check if the file exists
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
 	f, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
