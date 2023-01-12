@@ -25,6 +25,7 @@ import (
 
 	"github.com/ossf/scorecard-action/install/github"
 	"github.com/ossf/scorecard-action/install/options"
+	_ "github.com/robotsandpencils/go-saml"
 )
 
 const (
