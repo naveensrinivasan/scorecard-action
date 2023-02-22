@@ -22,7 +22,7 @@ jobs:
 
       # This is a pre-submit / pre-release.
       - name: "Run analysis"
-        uses: ossf/scorecard-action@main
+        uses: ossf/scorecard-action@570a953ea0770f30a8aa0a778cfc4bc955bbf9c4 # main
         with:
           results_file: results.sarif
           results_format: sarif
