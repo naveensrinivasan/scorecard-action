@@ -2,6 +2,7 @@ name: Scorecards dependency analysis
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   dependency-analysis:
