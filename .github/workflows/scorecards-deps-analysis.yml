@@ -16,6 +16,7 @@ jobs:
     env:
       GITHUB_PR_NUMBER: ${{ github.event.number }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
 
 
     steps:
@@ -30,6 +31,7 @@ jobs:
           echo $GITHUB_SHA
           echo $GITHUB_TOKEN
           echo $GITHUB_REPOSITORY_OWNER
+          echo $GITHUB_ACTOR
         shell: bash
 
       - name: Run analysis
@@ -40,4 +42,5 @@ jobs:
           -e GITHUB_REPOSITORY=$GITHUB_REPOSITORY \
           -e GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER \
           -e GITHUB_SHA=$GITHUB_SHA \
+          -e GITHUB_ACTOR=$GITHUB_ACTOR \
           ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:111b4140f5bf6822399d4369b525d2973cf913d6

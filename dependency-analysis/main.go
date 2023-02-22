@@ -21,6 +21,7 @@ func main() {
 	commitSHA := os.Getenv("GITHUB_SHA")
 	token := os.Getenv("GITHUB_TOKEN")
 	pr := os.Getenv("GITHUB_PR_NUMBER")
+	ghUser := os.Getenv("GITHUB_ACTOR")
 	if err := Validate(token, owner, repo, commitSHA, pr); err != nil {
 		log.Fatal(err)
 	}
@@ -100,7 +101,7 @@ func main() {
 	if vulns == "" && result == "" {
 		return
 	}
-	if err := createOrUpdateComment(client, owner, repo, prInt, "## Scorecard Results</br>\n"+vulns+"</br>"+result); err != nil {
+	if err := createOrUpdateComment(client, owner, ghUser, repo, prInt, "## Scorecard Results</br>\n"+vulns+"</br>"+result); err != nil {
 		log.Fatal(err)
 	}
 	if vulns != "" {
@@ -147,19 +148,15 @@ func Validate(token string, owner string, repo string, commitSHA string, pr stri
 }
 
 // createOrUpdateComment creates a new comment on the pull request or updates an existing one.
-func createOrUpdateComment(client *github.Client, owner, repo string, prNum int, commentBody string) error {
+func createOrUpdateComment(client *github.Client, owner, githubUser, repo string, prNum int, commentBody string) error {
 	comments, _, err := client.Issues.ListComments(context.Background(), owner, repo, prNum, &github.IssueListCommentsOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get comments: %v", err)
 	}
-	user, _, err := client.Users.Get(context.Background(), "")
-	if err != nil {
-		return fmt.Errorf("failed to get user: %v", err)
-	}
 	// Check if the user has already left a comment on the pull request.
 	var existingComment *github.IssueComment
 	for _, comment := range comments {
-		if comment.GetUser().GetLogin() == user.GetLogin() {
+		if comment.GetUser().GetLogin() == githubUser {
 			existingComment = comment
 			break
 		}
