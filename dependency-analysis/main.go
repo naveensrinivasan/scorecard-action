@@ -37,6 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(checks)
 
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(context.Background(), ts)
@@ -293,7 +294,7 @@ func GetIgnoreList() ([]string, error) {
 func GetScorecardChecks() ([]string, error) {
 	fileName := os.Getenv("SCORECARD_CHECKS")
 	if fileName == "" {
-		return []string{"Binary-Artifacts,"}, nil
+		return []string{"Dangerous-Workflow", "Binary-Artifacts", "Branch-Protection", "Code-Review", "Dependency-Update-Tool"}, nil
 	}
 	f, err := os.Open(fileName)
 	if err != nil {
