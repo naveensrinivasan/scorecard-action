@@ -10,7 +10,7 @@ require (
 	github.com/sigstore/cosign v1.13.1
 	github.com/spf13/cobra v1.6.1
 	golang.org/x/net v0.7.0
-	golang.org/x/oauth2 v0.3.0
+	golang.org/x/oauth2 v0.5.0
 )
 
 require (
