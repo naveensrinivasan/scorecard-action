@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened]
 permissions:
   issues: write
-  pull-request: write
+  pull-requests: write
 
 jobs:
   dependency-analysis:
