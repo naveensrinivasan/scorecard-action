@@ -25,7 +25,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ownerRepo := strings.Split(owner, "/")
+	ownerRepo := strings.Split(repo, "/")
 	owner = ownerRepo[0]
 	repo = ownerRepo[1]
 	checks, err := GetScorecardChecks()
