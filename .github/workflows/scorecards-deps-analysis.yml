@@ -3,6 +3,11 @@ name: Scorecards dependency analysis
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   dependency-analysis:
