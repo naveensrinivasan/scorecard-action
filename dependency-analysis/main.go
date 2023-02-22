@@ -25,6 +25,9 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ownerRepo := strings.Split(owner, "/")
+	owner = ownerRepo[0]
+	repo = ownerRepo[1]
 	checks, err := GetScorecardChecks()
 	if err != nil {
 		log.Fatal(err)
@@ -40,9 +43,6 @@ func main() {
 	client := github.NewClient(tc)
 	// Get the dependency diff
 	//split owner and repo from owner string
-	ownerRepo := strings.Split(owner, "/")
-	owner = ownerRepo[0]
-	repo = ownerRepo[1]
 	fmt.Println("owner: ", owner)
 	fmt.Println("repo: ", repo)
 	data, err := GetDependencyDiff(owner, repo, token, defaultBranch, commitSHA)
