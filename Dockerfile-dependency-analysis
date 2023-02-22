@@ -19,7 +19,7 @@
 # -e GITHUB_PR_NUMBER=9 \
 
 #v1.19 go
-FROM golang:1.19.5@sha256:bb9811fad43a7d6fd2173248d8331b2dcf5ac9af20976b1937ecd214c5b8c383 AS builder
+FROM golang:1.19.5 as   builder
 WORKDIR /
 ENV CGO_ENABLED=0
 COPY go.mod go.sum ./
@@ -30,6 +30,6 @@ ARG TARGETOS
 ARG TARGETARCH
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /dependency-analysis /
 
-FROM gcr.io/distroless/base@sha256:122585ba4c098993df9f8dc7285433e8a19974de32528ee3a4b07308808c84ce
+FROM gcr.io/distroless/base
 COPY --from=build /dependency-analysis /dependency-analysis
 ENTRYPOINT ["/dependency-analysis"]
