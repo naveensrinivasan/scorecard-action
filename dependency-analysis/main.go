@@ -39,6 +39,12 @@ func main() {
 	tc := oauth2.NewClient(context.Background(), ts)
 	client := github.NewClient(tc)
 	// Get the dependency diff
+	//split owner and repo from owner string
+	ownerRepo := strings.Split(owner, "/")
+	owner = ownerRepo[0]
+	repo = ownerRepo[1]
+	fmt.Println("owner: ", owner)
+	fmt.Println("repo: ", repo)
 	data, err := GetDependencyDiff(owner, repo, token, defaultBranch, commitSHA)
 	if err != nil {
 		log.Fatal(err)
