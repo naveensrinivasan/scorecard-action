@@ -35,4 +35,4 @@ jobs:
           -e GITHUB_REPOSITORY=$GITHUB_REPOSITORY \
           -e GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER \
           -e GITHUB_SHA=$GITHUB_SHA \
-          ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:8f8cf7b17fcb623f0339afb19a70000589404c20
+          ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:04d3d6fdaf99f1846daead36d8a6f164fafd55aa
