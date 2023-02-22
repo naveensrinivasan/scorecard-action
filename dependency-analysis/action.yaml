@@ -25,4 +25,4 @@ branding:
 
 runs:
   using: "docker"
-  image: "Dockerfile-dependency-analysis"
+  image: "ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:naveen-feat-dependency-analysis"
