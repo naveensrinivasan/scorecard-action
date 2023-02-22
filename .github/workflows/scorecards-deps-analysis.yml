@@ -12,6 +12,7 @@ jobs:
       GITHUB_PR_NUMBER: ${{ github.event.number }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -23,4 +24,7 @@ jobs:
           docker run --rm \
           -e GITHUB_PR_NUMBER=$GITHUB_PR_NUMBER \
           -e GITHUB_TOKEN=$GITHUB_TOKEN \
+          -e GITHUB_REPOSITORY=$GITHUB_REPOSITORY \
+          -e GITHUB_REPOSITORY_OWNER=$GITHUB_REPOSITORY_OWNER \
+          -e GITHUB_SHA=$GITHUB_SHA \
           ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:naveen-feat-dependency-analysis
