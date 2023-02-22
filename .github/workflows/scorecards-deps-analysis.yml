@@ -1,0 +1,19 @@
+name: Scorecards dependency analysis
+on: [push, pull_request]
+
+jobs:
+  dependency-analysis:
+    name: Scorecards dependency analysis
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PR_NUMBER: ${{ github.event.number }}
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+        with:
+          persist-credentials: false
+
+      - name: "Run analysis"
+        uses: ./dependency-analysis
+
