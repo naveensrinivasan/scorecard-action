@@ -25,10 +25,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//ignoreList, err := GetIgnoreList()
-	//if err != nil {
-	//	panic(err)
-	//}
 	checks, err := GetScorecardChecks()
 	if err != nil {
 		log.Fatal(err)
@@ -87,7 +83,7 @@ func main() {
 			return false
 		})
 		scorecard.Vulnerabilities = i.Vulnerabilities
-		result += WriteGitHubIssueComment(scorecard)
+		result += GitHubIssueComment(scorecard)
 	}
 	// convert pr to int
 	prInt, err := strconv.Atoi(pr)
@@ -95,14 +91,19 @@ func main() {
 		log.Fatal(err)
 	}
 	// create or update comment
-	if vulns == "" {
+	if vulns == "" && result == "" {
 		return
 	}
 	if err := createOrUpdateComment(client, owner, repo, prInt, "## Scorecard Results</br>\n"+vulns+"</br>"+result); err != nil {
 		log.Fatal(err)
 	}
+	if vulns != "" {
+		// this will fail the workflow
+		os.Exit(1)
+	}
 }
 
+// getDefaultBranch gets the default branch of the repository.
 func getDefaultBranch(owner, repo, token string) (string, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -119,6 +120,7 @@ func getDefaultBranch(owner, repo, token string) (string, error) {
 	return repository.GetDefaultBranch(), nil
 }
 
+// Validate validates the input parameters.
 func Validate(token string, owner string, repo string, commitSHA string, pr string) error {
 	if token == "" {
 		return fmt.Errorf("token is empty")
@@ -138,6 +140,7 @@ func Validate(token string, owner string, repo string, commitSHA string, pr stri
 	return nil
 }
 
+// createOrUpdateComment creates a new comment on the pull request or updates an existing one.
 func createOrUpdateComment(client *github.Client, owner, repo string, prNum int, commentBody string) error {
 	comments, _, err := client.Issues.ListComments(context.Background(), owner, repo, prNum, &github.IssueListCommentsOptions{})
 	if err != nil {
@@ -178,7 +181,8 @@ func createOrUpdateComment(client *github.Client, owner, repo string, prNum int,
 	return nil
 }
 
-func WriteGitHubIssueComment(checks ScorecardResult) string {
+// GitHubIssueComment returns a markdown string for a GitHub issue comment.
+func GitHubIssueComment(checks ScorecardResult) string {
 	if checks.Repo.Name == "" {
 		return ""
 	}
@@ -207,6 +211,7 @@ func WriteGitHubIssueComment(checks ScorecardResult) string {
 	return sb.String()
 }
 
+// GetDependencyDiff returns the dependency diff between two commits. It returns an error if the dependency graph is not enabled.
 func GetDependencyDiff(owner, repo, token, base, head string) ([]DependencyDiff, error) {
 	if owner == "" {
 		return nil, fmt.Errorf("owner is required")
@@ -217,7 +222,7 @@ func GetDependencyDiff(owner, repo, token, base, head string) ([]DependencyDiff,
 	if token == "" {
 		return nil, fmt.Errorf("token is required")
 	}
-	resp, err := GetGitHubData(owner, repo, token, base, head)
+	resp, err := GetGitHubDependencyDiff(owner, repo, token, base, head)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -244,7 +249,8 @@ func GetDependencyDiff(owner, repo, token, base, head string) ([]DependencyDiff,
 	return filteredData, nil
 }
 
-func GetGitHubData(owner string, repo string, token string, base string, head string) (*http.Response, error) {
+// GetGitHubDependencyDiff returns the dependency diff between two commits. It returns an error if the dependency graph is not enabled.
+func GetGitHubDependencyDiff(owner string, repo string, token string, base string, head string) (*http.Response, error) {
 	req, err := http.NewRequest("GET",
 		fmt.Sprintf("https://api.github.com/repos/%s/%s/dependency-graph/compare/%s...%s", owner, repo, base, head), nil)
 	if err != nil {
@@ -261,6 +267,7 @@ func GetGitHubData(owner string, repo string, token string, base string, head st
 	return resp, nil
 }
 
+// filter returns a new slice containing all elements of slice that satisfy the predicate f.
 func filter[T any](slice []T, f func(T) bool) []T {
 	var n []T
 	for _, e := range slice {
@@ -269,24 +276,6 @@ func filter[T any](slice []T, f func(T) bool) []T {
 		}
 	}
 	return n
-}
-
-// GetIgnoreList returns the list of repositories to ignore.
-// This uses the IGNORE_LIST environment variable to get the path to the ignore list.
-func GetIgnoreList() ([]string, error) {
-	fileName := os.Getenv("SCORECARD_IGNORE_LIST")
-	f, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	decoder := json.NewDecoder(f)
-	var ignoreListFromFile []string
-	err = decoder.Decode(&ignoreListFromFile)
-	if err != nil {
-		return nil, err
-	}
-	return ignoreListFromFile, nil
 }
 
 // GetScorecardChecks returns the list of checks to run.
@@ -317,7 +306,6 @@ func GetScore(repo string) (ScorecardResult, error) {
 		return ScorecardResult{}, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Accept", "application/json")
-
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return ScorecardResult{}, fmt.Errorf("failed to get response: %w", err)
