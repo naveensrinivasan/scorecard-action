@@ -24,25 +24,7 @@ inputs:
   required: true
   default: ${{ secrets.GITHUB_TOKEN }}
 
-outputs:
-  scorecard-results:
-  description: "The results of the OSSF Scorecard dependency analysis."
 
 runs:
   using: "docker"
   image: "ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:latest"
-  args: [
-    "--github-pr-number", "${{ github.event.number }}",
-    "--github-token", "${{ inputs.github-token }}",
-    "--github-repository", "${{ github.repository }}",
-    "--github-repository-owner", "${{ github.repository_owner }}",
-    "--github-sha", "${{ github.sha }}",
-    "--github-actor", "${{ github.actor }}"
-  ]
-
-permissions:
-pull-requests: write
-
-on:
-  pull_request:
-  types: [opened, synchronize, reopened]
