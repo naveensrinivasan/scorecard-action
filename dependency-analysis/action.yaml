@@ -20,4 +20,4 @@ author: "OSSF - github.com/ossf/scorecard"
 
 runs:
   using: "docker"
-  image: "ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:latest"
+  image: "docker://ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:latest"
