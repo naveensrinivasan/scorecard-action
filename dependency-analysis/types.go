@@ -42,6 +42,3 @@ type Vulnerability struct {
 	AdvisoryUrl     string `json:"advisory_url"`
 }
 
-type Git interface {
-	GetDependencyDiff(owner, repo, token, base, head string) ([]DependencyDiff, error)
-}

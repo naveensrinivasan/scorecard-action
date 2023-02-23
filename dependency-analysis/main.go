@@ -16,6 +16,9 @@ import (
 )
 
 func main() {
+	vulnerabilities := ""
+	result := ""
+
 	owner := os.Getenv("GITHUB_REPOSITORY_OWNER")
 	repo := os.Getenv("GITHUB_REPOSITORY")
 	commitSHA := os.Getenv("GITHUB_SHA")
@@ -33,29 +36,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defaultBranch, err := getDefaultBranch(owner, repo, token)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(checks)
 
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(context.Background(), ts)
 	client := github.NewClient(tc)
-	// Get the dependency diff
-	//split owner and repo from owner string
-	fmt.Println("owner: ", owner)
-	fmt.Println("repo: ", repo)
 	data, err := GetDependencyDiff(owner, repo, token, defaultBranch, commitSHA)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	m := make(map[string]DependencyDiff)
 	for _, dep := range data {
 		m[dep.SourceRepositoryURL] = dep
 	}
-	vulns := ""
-	result := ""
+
 	for k, i := range m {
 		url := strings.TrimPrefix(k, "https://")
 		scorecard, error := GetScore(url)
@@ -69,16 +68,16 @@ func main() {
 			sb.WriteString("<th>AdvisorySummary</th>\n")
 			sb.WriteString("<th>AdvisoryUrl</th>\n")
 			sb.WriteString("</tr>\n")
-			for _, vulns := range i.Vulnerabilities {
+			for _, v := range i.Vulnerabilities {
 				sb.WriteString("<tr>\n")
-				sb.WriteString(fmt.Sprintf("<td>%s</td>\n", vulns.Severity))
-				sb.WriteString(fmt.Sprintf("<td>%s</td>\n", vulns.AdvisoryGhsaId))
-				sb.WriteString(fmt.Sprintf("<td>%s</td>\n", vulns.AdvisorySummary))
-				sb.WriteString(fmt.Sprintf("<td>%s</td>\n", vulns.AdvisoryUrl))
+				sb.WriteString(fmt.Sprintf("<td>%s</td>\n", v.Severity))
+				sb.WriteString(fmt.Sprintf("<td>%s</td>\n", v.AdvisoryGhsaId))
+				sb.WriteString(fmt.Sprintf("<td>%s</td>\n", v.AdvisorySummary))
+				sb.WriteString(fmt.Sprintf("<td>%s</td>\n", v.AdvisoryUrl))
 			}
 			sb.WriteString("</table>\n")
 			sb.WriteString("</details>\n")
-			vulns += sb.String()
+			vulnerabilities += sb.String()
 			continue
 		}
 		scorecard.Checks = filter(scorecard.Checks, func(check Check) bool {
@@ -98,14 +97,14 @@ func main() {
 		log.Fatal(err)
 	}
 	// create or update comment
-	if vulns == "" && result == "" {
+	if vulnerabilities == "" && result == "" {
 		return
 	}
-	if err := createOrUpdateComment(client, owner, ghUser, repo, prInt, "## Scorecard Results</br>\n"+vulns+"</br>"+result); err != nil {
+	if err := createOrUpdateComment(client, owner, ghUser, repo, prInt, "## Scorecard Results</br>\n"+vulnerabilities+"</br>"+result); err != nil {
 		log.Fatal(err)
 	}
-	if vulns != "" {
-		// this will fail the workflow
+	if vulnerabilities != "" {
+		// this will fail the workflow if there are any vulnerabilities
 		os.Exit(1)
 	}
 }
@@ -286,6 +285,7 @@ func filter[T any](slice []T, f func(T) bool) []T {
 func GetScorecardChecks() ([]string, error) {
 	fileName := os.Getenv("SCORECARD_CHECKS")
 	if fileName == "" {
+		// default to critical and high severity checks
 		return []string{"Dangerous-Workflow", "Binary-Artifacts", "Branch-Protection", "Code-Review", "Dependency-Update-Tool"}, nil
 	}
 	f, err := os.Open(fileName)

@@ -1,4 +1,4 @@
-name: dependency-analysis
+name: scorecard-dependency-analysis
 
 on:
   pull_request:
