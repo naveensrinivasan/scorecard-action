@@ -18,13 +18,6 @@ name: "OSSF Scorecard dependency analysis"
 description: "Run OSSF Scorecard dependency analysis on your repository to get quality metrics on your dependencies."
 author: "OSSF - github.com/ossf/scorecard"
 
-inputs:
-  github-token:
-  description: "The GitHub token used to authenticate API requests."
-  required: true
-  default: ${{ secrets.GITHUB_TOKEN }}
-
-
 runs:
   using: "docker"
   image: "ghcr.io/naveensrinivasan/scorecard-action-dependency-analysis:latest"
