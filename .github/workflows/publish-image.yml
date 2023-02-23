@@ -1,8 +1,11 @@
 name: Publish Dependency Analysis Docker image
 
 on:
-  push: [main]
-  tags: [v*]
+  push:
+    branches:
+       - main
+    tags:
+       - 'v*'
 
 env:
   REGISTRY: ghcr.io
